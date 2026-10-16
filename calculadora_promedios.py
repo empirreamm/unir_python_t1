@@ -1,11 +1,15 @@
+import math
+
 def isExit(value):
     if value.lower() in ["fin", "end", "exit"]:
         return True
     return False
 
+
 def ingresar_calificaciones():
     calificaciones = []
     classes = []
+    continue_input = None
 
     while True:
         try:
@@ -20,9 +24,10 @@ def ingresar_calificaciones():
             if isExit(calificacion):
                 break
 
-            if not calificacion:
+            if not calificacion or calificacion.strip() == "" or calificacion.lower() == "nan" or math.isnan(float(calificacion)):
                 print("La calificación no puede estar vacía. Intente nuevamente.")
                 continue
+
 
             if(float(calificacion) < 0 or float(calificacion) > 10):
                 print("La calificación debe estar entre 0 y 10. Intente nuevamente.")
@@ -31,10 +36,16 @@ def ingresar_calificaciones():
             classes.append(className)
             calificaciones.append(abs(float(calificacion)))
 
-            continue_input = input("¿Desea ingresar otra calificación? (s/n): ")
-            if continue_input.lower() != 'n':
-                continue
-            break
+            while True:
+                continue_input = input("¿Desea ingresar otra calificación? (s/n): ")
+                if continue_input.lower() in ["s", "n"]:
+                    break
+                else:
+                    print("Por favor, ingrese 's' para sí o 'n' para no.")
+
+            if continue_input.lower() == 'n':
+                break
+
         except ValueError:
             print("Por favor, ingrese una calificación válida.")
 
@@ -58,10 +69,15 @@ def determinar_estado(calificaciones, umbral=5):
 def encontrar_extremos(calificaciones):
     if not calificaciones:
         return None, None
-    return min(calificaciones), max(calificaciones)
+    minIndex = calificaciones.index(min(calificaciones))
+    maxIndex = calificaciones.index(max(calificaciones))
+    return minIndex, maxIndex
 
 def main():
     classes, calificaciones = ingresar_calificaciones()
+    if not classes:
+        print("No se ingresaron materias. Saliendo del programa.")
+        return
     promedio = calcular_promedio(calificaciones)
     passedClasses, failedClasses = determinar_estado(calificaciones)
     minCal, maxCal = encontrar_extremos(calificaciones)
@@ -77,8 +93,8 @@ def main():
     print(f"\tMaterias reprobadas:")
     for i in failedClasses:
         print(f"\t\t{classes[i]}: {float(calificaciones[i]):.2f}")
-    print(f"\tCalificación máxima: {maxCal:.2f}")
-    print(f"\tCalificación mínima: {minCal:.2f}")
+    print(f"\tCalificación máxima: {classes[maxCal]} {float(calificaciones[maxCal]):.2f}")
+    print(f"\tCalificación mínima: {classes[minCal]} {float(calificaciones[minCal]):.2f}")
     print("Gracias por usar la calculadora de promedios. ¡Hasta luego!")
 
 if __name__ == "__main__":
