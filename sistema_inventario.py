@@ -1,18 +1,11 @@
 import os
 import subprocess
-import unicodedata
 
 def clear_console():
     # Use 'cls' for Windows (nt), and 'clear' for Mac and Linux
     command = ["cmd", "/c", "cls"] if os.name == "nt" else ["clear"]
     subprocess.run(command, check=False)
 
-def normalize_string(s):
-    if not isinstance(s, str):
-        raise ValueError("El valor debe ser una cadena de texto.")
-    s = unicodedata.normalize('NFD', s)
-    s = "".join(char for char in s if unicodedata.category(char) != 'Mn')
-    return s.strip().lower().encode('ASCII', 'ignore').decode('ASCII')
 
 
 class Producto:
@@ -37,7 +30,6 @@ class Producto:
             raise ValueError("La cantidad no puede ser negativa.")
 
         self.nombre = nombre.strip()
-        self.search_name = normalize_string(nombre)
         self.precio = precio
         self.cantidad = cantidad
 
@@ -68,7 +60,7 @@ class Inventario:
         if producto.nombre in self.productos:
             raise ValueError("El producto ya existe en el inventario.")
 
-        self.productos[producto.search_name] = producto
+        self.productos[producto.nombre] = producto
 
     def buscar_producto(self, nombre):
         if not isinstance(nombre, str):
@@ -76,7 +68,7 @@ class Inventario:
         if not nombre.strip():
             raise ValueError("El nombre del producto no puede estar vacío.")
 
-        return self.productos.get(normalize_string(nombre), None)
+        return self.productos.get(nombre.strip(), None)
 
     def calcular_valor_inventario(self):
         return sum(producto.calcular_valor_total() for producto in self.productos.values())
@@ -144,11 +136,16 @@ def menuPrincipal():
                 print(f"Error al buscar el producto: {e}")
             input("Presione Enter para continuar...")
         elif opcion == "3":
+            if not inventario.productos:
+                print("No hay productos en el inventario.")
             for producto in inventario.listar_productos():
                 print(producto)
             input("Presione Enter para continuar...")
         elif opcion == "4":
-            print(f"Valor total del inventario: ${inventario.calcular_valor_inventario():.2f}")
+            if not inventario.productos:
+                print("No hay productos en el inventario.")
+            else:
+                print(f"Valor total del inventario: ${inventario.calcular_valor_inventario():.2f}")
             input("Presione Enter para continuar...")
         elif opcion == "5":
             print("Saliendo del sistema de inventario.")
