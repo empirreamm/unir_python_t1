@@ -49,3 +49,38 @@ Resultados:
     Calificación máxima: 8.00
     Calificación mínima: 4.00
 ```
+
+# Sistema de inventario
+
+Programa de consola para administrar productos, sus precios y las cantidades disponibles.
+
+## Requisitos
+
+- Python 3.6 o posterior
+- No requiere dependencias externas
+
+## Uso
+
+Desde la carpeta del proyecto, ejecuta:
+
+```bash
+python sistema_inventario.py
+```
+
+En algunos sistemas puede ser necesario usar `python3`:
+
+```bash
+python3 sistema_inventario.py
+```
+
+## Opciones
+
+El menú permite:
+
+1. **Agregar producto:** ingresa el nombre, el precio y la cantidad. El nombre se guarda sin los espacios al principio y al final, conservando mayúsculas y minúsculas. No se permiten productos duplicados, precios negativos ni cantidades negativas.
+2. **Buscar producto:** la búsqueda usa el nombre exacto, incluidas mayúsculas, minúsculas y espacios. Para encontrar un producto, escribe el nombre tal como quedó guardado (sin los espacios exteriores que se recortaron al agregarlo). Si no existe una coincidencia exacta, el programa muestra un aviso.
+3. **Listar productos:** muestra los productos registrados.
+4. **Calcular valor total del inventario:** suma el precio de cada producto multiplicado por su cantidad.
+5. **Salir:** termina el programa.
+
+Los precios deben ser números válidos y las cantidades deben ser enteros no negativos. El programa informa de los datos inválidos y permite volver al menú.

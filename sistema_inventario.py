@@ -1,71 +1,89 @@
 import os
+import subprocess
+import unicodedata
+
 def clear_console():
     # Use 'cls' for Windows (nt), and 'clear' for Mac and Linux
-    os.system('cls' if os.name == 'nt' else 'clear')
+    command = ["cmd", "/c", "cls"] if os.name == "nt" else ["clear"]
+    subprocess.run(command, check=False)
+
+def normalize_string(s):
+    if not isinstance(s, str):
+        raise ValueError("El valor debe ser una cadena de texto.")
+    s = unicodedata.normalize('NFD', s)
+    s = "".join(char for char in s if unicodedata.category(char) != 'Mn')
+    return s.strip().lower().encode('ASCII', 'ignore').decode('ASCII')
+
 
 class Producto:
-        
     def __init__(self, nombre, precio, cantidad=0):
-        if not nombre or nombre.strip() == "" or nombre is None:
+        if not isinstance(nombre, str):
+            raise ValueError("El nombre del producto debe ser una cadena de texto.")
+        if not nombre.strip():
             raise ValueError("El nombre del producto no puede estar vacío.")
-        if cantidad < 0:
-            raise ValueError("La cantidad no puede ser negativa.")
+
+        try:
+            precio = float(precio)
+        except (TypeError, ValueError):
+            raise ValueError("El precio debe ser un número válido.") from None
         if precio < 0:
             raise ValueError("El precio no puede ser negativo.")
 
         try:
-            self.precio = float(precio)
-        except ValueError:
-            raise ValueError("El precio debe ser un número válido.")
+            cantidad = int(cantidad)
+        except (TypeError, ValueError):
+            raise ValueError("La cantidad debe ser un número entero válido.") from None
+        if cantidad < 0:
+            raise ValueError("La cantidad no puede ser negativa.")
 
-        try:
-            self.cantidad = int(cantidad)
-        except ValueError:
-            raise ValueError("La cantidad debe ser un número entero válido.")
-
-        self.nombre = nombre.strip() if nombre else None
+        self.nombre = nombre.strip()
+        self.search_name = normalize_string(nombre)
+        self.precio = precio
+        self.cantidad = cantidad
 
     def __str__(self):
         return f"Producto: {self.nombre}, Cantidad: {self.cantidad}, Precio: {self.precio}"
 
     def actualizar_cantidad(self, cantidad):
-        if cantidad < 0 or not isinstance(cantidad, (int, float)):
-            raise ValueError("La cantidad debe ser un número entero no negativo.")
+        if not isinstance(cantidad, (int, float)) or cantidad < 0:
+            raise ValueError("La cantidad debe ser un número no negativo.")
         self.cantidad = cantidad
 
     def actualizar_precio(self, precio):
-        if precio < 0 or not isinstance(precio, (int, float)):
+        if not isinstance(precio, (int, float)) or isinstance(precio, bool) or precio < 0:
             raise ValueError("El precio debe ser un número no negativo.")
         self.precio = precio
 
     def calcular_valor_total(self):
         return self.cantidad * self.precio
 
+
 class Inventario:
     def __init__(self):
         self.productos = {}
 
     def agregar_producto(self, producto):
+        if not isinstance(producto, Producto):
+            raise ValueError("Debe proporcionar un objeto de tipo Producto.")
         if producto.nombre in self.productos:
             raise ValueError("El producto ya existe en el inventario.")
 
-        if not isinstance(producto, Producto):
-            raise ValueError("Debe proporcionar un objeto de tipo Producto.")
-        
-        self.productos[producto.nombre] = producto
+        self.productos[producto.search_name] = producto
 
     def buscar_producto(self, nombre):
-        if not nombre or nombre.strip() == "":
-            raise ValueError("El nombre del producto no puede estar vacío.")
         if not isinstance(nombre, str):
             raise ValueError("El nombre del producto debe ser una cadena de texto.")
-        return self.productos.get(nombre, None)
+        if not nombre.strip():
+            raise ValueError("El nombre del producto no puede estar vacío.")
+
+        return self.productos.get(normalize_string(nombre), None)
 
     def calcular_valor_inventario(self):
         return sum(producto.calcular_valor_total() for producto in self.productos.values())
 
     def listar_productos(self):
         return list(self.productos.values())
+
 
 def menuPrincipal():
     inventario = Inventario()
@@ -109,21 +127,21 @@ def menuPrincipal():
                 producto = Producto(productoNombre, productoPrecio, productoCantidad)
                 inventario.agregar_producto(producto)
                 print(f"Producto '{productoNombre}' agregado exitosamente.")
-            except ValueError as e:
+            except (TypeError, ValueError) as e:
                 print(f"Error al agregar el producto: {e}")
 
             input("Presione Enter para continuar...")
 
         elif opcion == "2":
             productoNombre = input("Ingrese el nombre del producto a buscar: ")
-            if not productoNombre or productoNombre.strip() == "":
-                print("El nombre del producto no puede estar vacío. Intente nuevamente.")
-                continue
-            producto = inventario.buscar_producto(productoNombre)
-            if producto:
-                print(f"Producto encontrado: {producto}")
-            else:
-                print(f"Producto '{productoNombre}' no encontrado en el inventario.")
+            try:
+                producto = inventario.buscar_producto(productoNombre)
+                if producto is None:
+                    print(f"Producto '{productoNombre}' no encontrado en el inventario.")
+                else:
+                    print(f"Producto encontrado: {producto}")
+            except (TypeError, ValueError) as e:
+                print(f"Error al buscar el producto: {e}")
             input("Presione Enter para continuar...")
         elif opcion == "3":
             for producto in inventario.listar_productos():
@@ -137,7 +155,7 @@ def menuPrincipal():
             break
         else:
             print("Opción inválida. Intente nuevamente.")
-            print("Presione Enter para continuar...")
+            print("Presione Enter para continuar...\n")
 
 
 if __name__ == "__main__":
